@@ -6,27 +6,27 @@ package ca.plasticglass.chip8;
  */
 public class Memory {
 
-    private static short[] memory;
-    private final short PROGRAM_LOAD_POINT = (short) 0x200;
+    private static byte[] memory;
+    private final byte PROGRAM_LOAD_POINT = (byte) 0x200;
     private final short MEMORY_SIZE = 0xFFF + 1; //+1 because of zero index
 
     public Memory(){
-        memory = new short[MEMORY_SIZE];
+        memory = new byte[MEMORY_SIZE];
     }
 
     public void loadFile(String fileName){
 
     }
 
-    public short[] getMemory(){
+    public byte[] getMemory(){
         return memory;
     }
 
-    public short get(int address){
+    public byte get(int address){
         return memory[address];
     }
 
-    public short getLoadPoint(){
+    public byte getLoadPoint(){
         return PROGRAM_LOAD_POINT;
     }
 

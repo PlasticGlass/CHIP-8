@@ -13,8 +13,4 @@ public class Screen extends JFrame {
     public void redraw(){
 
     }
-
-    public void clear(){
-
-    }
 }
