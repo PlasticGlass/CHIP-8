@@ -6,27 +6,43 @@ package ca.plasticglass.chip8;
  */
 public class Memory {
 
-    private static short[] memory;
-    private final short PROGRAM_LOAD_POINT = (short) 0x200;
-    private final short MEMORY_SIZE = 0xFFF + 1; //+1 because of zero index
+    private static int[] memory;
+    private final int PROGRAM_LOAD_POINT = 0x200;
+    private final int MEMORY_SIZE = 0xFFF; //+1 because of zero index
+    private int[] fontset =
+            {
+                    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+                    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+                    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+                    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+                    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+                    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+                    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+                    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+                    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+                    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+                    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+                    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+                    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+                    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+                    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+                    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+            };
 
     public Memory(){
-        memory = new short[MEMORY_SIZE];
+        memory = new int[MEMORY_SIZE];
     }
 
     public void loadFile(String fileName){
 
     }
 
-    public short[] getMemory(){
+    public int[] getMemory(){
         return memory;
     }
 
-    public short get(int address){
-        return memory[address];
-    }
 
-    public short getLoadPoint(){
+    public int getLoadPoint(){
         return PROGRAM_LOAD_POINT;
     }
 
