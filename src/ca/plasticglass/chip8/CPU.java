@@ -224,16 +224,28 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
             case 0xF000:
                 switch (opcode & 0x00FF) {
                     case 0x0007:
+                        R[(opcode & 0x0F00) >> 8] = delayTimer;
+                        pc += 2;
                         break;
                     case 0x000A:
+                        R[(opcode & 0x0F00) >> 8] = waitForKeypress();
+                        pc += 2;
                         break;
                     case 0x0015:
+                        delayTimer = R[(opcode & 0x0F00) >> 8];
+                        pc += 2;
                         break;
                     case 0x0018:
+                        soundTimer = R[(opcode & 0x0F00) >> 8];
+                        pc += 2;
                         break;
                     case 0x001E:
+                        I += R[(opcode & 0x0F00) >> 8];
+                        pc += 2;
                         break;
                     case 0x0029:
+                        I = R[(opcode & 0x0F00) >> 8] * 5; //Sprites are 5 bytes long
+                        pc += 2;
                         break;
                     case 0x0033:
                         //Copied from
@@ -244,8 +256,16 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
                         pc += 2;
                         break;
                     case 0x0055:
+                        for(int i = 0;i<((opcode & 0x0F00) >> 8);i++){
+                            memory[I+i] = R[i];
+                        }
+                        pc += 2;
                         break;
                     case 0x0065:
+                        for(int i = 0;i<((opcode & 0x0F00) >> 8);i++){
+                            R[i] = memory[I+i];
+                        }
+                        pc += 2;
                         break;
                     default: //Invalid
 
@@ -261,6 +281,10 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
 
     public void updateKeysPressed() {
 
+    }
+
+    private int waitForKeypress() {
+        return 0;
     }
 
     public int getCurrentOpcode() {

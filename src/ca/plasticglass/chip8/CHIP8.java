@@ -1,6 +1,7 @@
 package ca.plasticglass.chip8;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.image.*;
 /**
  * Created by Zubair Waheed on 3/13/2018.
@@ -53,8 +54,19 @@ import java.awt.image.*;
         public CHIP8(int width, int height) {
             canvas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             fillCanvas(Color.BLUE);
-            drawRect(Color.RED, 0, 0, 10, 10);
+
             drawRect(Color.RED, 20, 20, 10, 10);
+
+            KeyboardFocusManager
+                    .getCurrentKeyboardFocusManager()
+                    .addKeyEventDispatcher(new KeyEventDispatcher() {
+                @Override
+                public boolean dispatchKeyEvent(KeyEvent e) {
+                    System.out.println(e.getKeyChar() + " Key Pressed!!!");
+
+                    return false;
+                }
+            });
         }
 
         public Dimension getPreferredSize() {
@@ -114,8 +126,15 @@ import java.awt.image.*;
             frame.setVisible(true);
             frame.setResizable(false);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+            /*for(int i = 0;i<10;i++) {
+
+                int width1 = 100;
+                panel.drawRect(Color.RED, 0 + (i*width1), 0, width1, 50);
+                try {
+                    Thread.sleep(1000);
+                } catch(Exception ex){}*/
+            }
         }
 
 
-    }
-//}
