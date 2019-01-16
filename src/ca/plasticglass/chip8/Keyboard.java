@@ -51,4 +51,15 @@ public class Keyboard extends KeyAdapter {
         return false;
     }
 
+    public char waitForKeypress(){
+        while(keysCurrentlyPressed.isEmpty()){
+            try {
+                Thread.sleep(100);
+            } catch(InterruptedException ex){
+                ex.printStackTrace();
+            }
+        }
+        return keysCurrentlyPressed.get(0);
+    }
+
 }

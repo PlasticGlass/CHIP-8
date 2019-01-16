@@ -23,7 +23,7 @@ public class CPU {
     private Random rand;
     private Keyboard keyboard;
 
-    public CPU(Memory memory, Screen screen, Keyboard input) {
+    public CPU(Memory memory, Screen screen, Keyboard keyboard) {
         this.screen = screen;
         this.memory = memory.getMemory();
         this.keyboard = keyboard;
@@ -200,8 +200,6 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
 
                 for(int i = 0;i<bytes;i++){
                     sprite = memory[I+i];
-
-
                 }
                 screen.setPixel(x,y);
 
@@ -228,7 +226,7 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
                         pc += 2;
                         break;
                     case 0x000A:
-                        R[(opcode & 0x0F00) >> 8] = waitForKeypress();
+                        R[(opcode & 0x0F00) >> 8] = (int) keyboard.waitForKeypress();
                         pc += 2;
                         break;
                     case 0x0015:
@@ -277,14 +275,6 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
     public void cycle() {
         fetch();
         execute();
-    }
-
-    public void updateKeysPressed() {
-
-    }
-
-    private int waitForKeypress() {
-        return 0;
     }
 
     public int getCurrentOpcode() {
