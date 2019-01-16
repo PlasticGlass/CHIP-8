@@ -21,12 +21,12 @@ public class CPU {
     private int[] keys;
     private boolean redrawStatus;
     private Random rand;
-    private Input input;
+    private Keyboard keyboard;
 
-    public CPU(Memory memory, Screen screen, Input input) {
+    public CPU(Memory memory, Screen screen, Keyboard input) {
         this.screen = screen;
         this.memory = memory.getMemory();
-        this.input = input;
+        this.keyboard = keyboard;
 
         R = new int[16];
         pixels = new int[2048];
@@ -209,12 +209,12 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
             case 0xE000:
                 switch (opcode & 0x00FF) {
                     case 0x009E: //Skip next instruction if key with the value of Vx is pressed.
-                        if(input.getKey(R[(opcode & 0x0F00) >> 8]) == 1) {
+                        if(keyboard.keyCurrentlyPressed((char) (R[(opcode & 0x0F00) >> 8]))) {
                             pc += 4;
                         }
                         break;
                     case 0x00A1: //Skip next instruction if key with the value of Vx is not pressed.
-                        if(input.getKey(R[(opcode & 0x0F00) >> 8]) != 1) {
+                        if(!keyboard.keyCurrentlyPressed((char) (R[(opcode & 0x0F00) >> 8]))){
                             pc += 4;
                         }
                         break;

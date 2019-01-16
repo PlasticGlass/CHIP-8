@@ -56,17 +56,6 @@ import java.awt.image.*;
             fillCanvas(Color.BLUE);
 
             drawRect(Color.RED, 20, 20, 10, 10);
-
-            KeyboardFocusManager
-                    .getCurrentKeyboardFocusManager()
-                    .addKeyEventDispatcher(new KeyEventDispatcher() {
-                @Override
-                public boolean dispatchKeyEvent(KeyEvent e) {
-                    System.out.println(e.getKeyChar() + " Key Pressed!!!");
-
-                    return false;
-                }
-            });
         }
 
         public Dimension getPreferredSize() {
@@ -126,6 +115,7 @@ import java.awt.image.*;
             frame.setVisible(true);
             frame.setResizable(false);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.addKeyListener(new Keyboard());
 
             /*for(int i = 0;i<10;i++) {
 
