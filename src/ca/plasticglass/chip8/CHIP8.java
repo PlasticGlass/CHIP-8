@@ -108,7 +108,8 @@ import java.awt.image.*;
         JFrame frame = new JFrame("Direct draw demo");
         Keyboard k = new Keyboard();
 
-        CHIP8 panel = new CHIP8(width, height);
+        // CHIP8 panel = new CHIP8(width, height);
+        Screen panel = new Screen();
 
         frame.add(panel);
         frame.pack();
@@ -117,16 +118,15 @@ import java.awt.image.*;
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.addKeyListener(k);
 
-        System.out.println(k.waitForKeypress());
+        for (int i = 0; i < 64; i++) {
+            //if(i%2 == 0) {
+                panel.redrawPixel(i, 0, 1);
+                try {
+                    Thread.sleep(100);
+                } catch (Exception ex) {
+                }
+           // }
 
-        for (int i = 0; i < 10; i++) {
-
-            int width1 = 100;
-            panel.drawRect(Color.RED, 0 + (i * width1), 0, width1, 50);
-            try {
-                Thread.sleep(1000);
-            } catch (Exception ex) {
-            }
         }
     }
 }
