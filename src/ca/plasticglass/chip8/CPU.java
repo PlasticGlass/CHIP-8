@@ -217,18 +217,33 @@ existing screen. If this causes any pixels to be erased, VF is set to 1, otherwi
 to 0. If the sprite is positioned so part of it is outside the coordinates of the display, it
  wraps around to the opposite side of the screen. See instruction 8xy3 for more information on
  XOR, and section 2.4, Display, for more information on the Chip-8 screen and sprites.
+
+ 	Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
+ 	Each row of 8 pixels is read as bit-coded starting from memory location I; I value doesn’t change
+ 	after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are
+ 	flipped from set to unset when the sprite is drawn, and to 0 if that doesn’t happen
                  */
                 int x = R[((opcode & 0x0F00) >> 8)]; //Don't want last 2 digits
                 int y = R[((opcode & 0x00F0) >> 4)]; //Don't want last digit (4 bits)
                 int bytes = (opcode & 0x000F);
-                int sprite;
+                int spritePiece;
+                int mask = 0x80; //0x80 = 0b1000 0000
 
                 R[0xF] = 0;
 
                 for(int i = 0;i<bytes;i++){
-                    sprite = memory[I+i];
+                    spritePiece = memory[I+i];
+                    //Draw the horizontal sprite piece
+                    //Horizontal pieces have fixed width of 1 byte
+                    for(int xc = 0;xc<8;xc++) {
+                        if ((spritePiece & (mask >> xc)) == 1){
+                            if(screen.getPixel(x + xc, y + i) == 1){
+                                R[0xF] = 1; //Collision flag
+                            }
+                            screen.setPixel(x + xc, y + i);
+                        }
+                    }
                 }
-                screen.setPixel(x,y);
                 redrawStatus = true;
                 pc += 2;
                 break;
