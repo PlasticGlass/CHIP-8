@@ -1,12 +1,17 @@
 package ca.plasticglass.chip8;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 /**
  * Created by Zubair Waheed on 3/13/2018.
  *
  */
 public class Memory {
 
-    private static int[] memory;
+    private short[] memory;
     private final int PROGRAM_LOAD_POINT = 0x200;
     private final int MEMORY_SIZE = 0xFFF; //+1 because of zero index
     private int[] fontset =
@@ -30,14 +35,31 @@ public class Memory {
             };
 
     public Memory(){
-        memory = new int[MEMORY_SIZE];
+        memory = new short[MEMORY_SIZE];
+        loadFontset();
     }
 
     public void loadFile(String fileName){
+        try {
+            byte[] myBytes = Files.readAllBytes(Paths.get(System.getProperty("user.dir") + "\\" + fileName));
+            System.out.println(myBytes.length);
+            for(int i =0;i<myBytes.length;i++){
+                memory[PROGRAM_LOAD_POINT + i] = (short) (myBytes[i] & 0xFF); //Make byte unsigned
+            }
+        }catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
+        printMemoryState();
     }
 
-    public int[] getMemory(){
+    private void loadFontset() {
+        for(int i = 0; i< fontset.length;i++){
+            memory[i] = (byte) fontset[i];
+        }
+    }
+
+    public short[] getMemory(){
         return memory;
     }
 
@@ -46,7 +68,8 @@ public class Memory {
         return PROGRAM_LOAD_POINT;
     }
 
-
-
-
+    private void printMemoryState() {
+        for(int i = 0; i<MEMORY_SIZE;i++)
+            System.out.println(String.format("%02X ", memory[i]));
+    }
 }

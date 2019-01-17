@@ -17,7 +17,7 @@ public class CPU {
     private int[] stack;
     private int stackPointer;
     private Screen screen;
-    private int[] memory;
+    private short[] memory;
     private int[] keys;
     private boolean redrawStatus;
     private Random rand;
@@ -48,6 +48,7 @@ public class CPU {
     }
 
     private void initTimers() {
+        delay = 0;
         delayTimer = new Timer();
         delayTimer.schedule(new TimerTask() {
             @Override
@@ -56,6 +57,7 @@ public class CPU {
             }
         },17, 17); //Run 60 times/second (17ms*60) = 1020ms = 1s
 
+        sound = 0;
         soundTimer = new Timer();
         soundTimer.schedule(new TimerTask() {
             @Override
@@ -73,9 +75,10 @@ public class CPU {
      * Stored in Big-Endian so top first
      */
     private void fetch() {
-        int top = memory[pc];
-        int bottom = memory[pc+1];
+        short top = memory[pc];
+        short bottom = memory[pc+1];
         opcode = ((top << 8) | bottom);
+        //System.out.println("DEBUG: Fetched opcode: " + String.format("%02X ", opcode));
     }
 
     /**
@@ -103,8 +106,9 @@ public class CPU {
                 pc = (opcode & 0x0FFF);
                 break;
             case 0x2000: //Call subroutine at NNN
-                stackPointer++;
                 stack[stackPointer] = pc;
+                stackPointer++;
+
                 pc = (opcode & 0x0FFF);
                 break;
             case 0x3000: //(3xkk)Skip next instruction if Rx = kk
@@ -209,19 +213,19 @@ public class CPU {
             case 0xD000:
                 /*
                 Dxyn - DRW Vx, Vy, nibble
-Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+                Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
 
-The interpreter reads n bytes from memory, starting at the address stored in I. These bytes
-are then displayed as sprites on screen at coordinates (Vx, Vy). Sprites are XORed onto the
-existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set
-to 0. If the sprite is positioned so part of it is outside the coordinates of the display, it
- wraps around to the opposite side of the screen. See instruction 8xy3 for more information on
- XOR, and section 2.4, Display, for more information on the Chip-8 screen and sprites.
+                The interpreter reads n bytes from memory, starting at the address stored in I. These bytes
+                are then displayed as sprites on screen at coordinates (Vx, Vy). Sprites are XORed onto the
+                existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set
+                to 0. If the sprite is positioned so part of it is outside the coordinates of the display, it
+                 wraps around to the opposite side of the screen. See instruction 8xy3 for more information on
+                 XOR, and section 2.4, Display, for more information on the Chip-8 screen and sprites.
 
- 	Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
- 	Each row of 8 pixels is read as bit-coded starting from memory location I; I value doesn’t change
- 	after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are
- 	flipped from set to unset when the sprite is drawn, and to 0 if that doesn’t happen
+                Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
+                Each row of 8 pixels is read as bit-coded starting from memory location I; I value doesn’t change
+                after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are
+                flipped from set to unset when the sprite is drawn, and to 0 if that doesn’t happen
                  */
                 int x = R[((opcode & 0x0F00) >> 8)]; //Don't want last 2 digits
                 int y = R[((opcode & 0x00F0) >> 4)]; //Don't want last digit (4 bits)
@@ -252,11 +256,15 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
                     case 0x009E: //Skip next instruction if key with the value of Vx is pressed.
                         if(keyboard.keyCurrentlyPressed((char) (R[(opcode & 0x0F00) >> 8]))) {
                             pc += 4;
+                        } else {
+                            pc += 2;
                         }
                         break;
                     case 0x00A1: //Skip next instruction if key with the value of Vx is not pressed.
                         if(!keyboard.keyCurrentlyPressed((char) (R[(opcode & 0x0F00) >> 8]))){
                             pc += 4;
+                        } else {
+                            pc += 2;
                         }
                         break;
                     default:
@@ -291,14 +299,14 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
                     case 0x0033:
                         //Copied from
                         //http://www.multigesture.net/wp-content/uploads/mirror/goldroad/chip8.shtml
-                        memory[I] = (R[((opcode & 0x0F00) >> 8)] / 100);
-                        memory[I + 1] = ((R[((opcode & 0x0F00) >> 8)] / 10) % 10);
-                        memory[I + 2] = ((R[((opcode & 0x0F00) >> 8)] % 100) % 10);
+                        memory[I] = (byte)(R[((opcode & 0x0F00) >> 8)] / 100);
+                        memory[I + 1] = (byte)((R[((opcode & 0x0F00) >> 8)] / 10) % 10);
+                        memory[I + 2] = (byte)((R[((opcode & 0x0F00) >> 8)] % 100) % 10);
                         pc += 2;
                         break;
                     case 0x0055:
                         for(int i = 0;i<((opcode & 0x0F00) >> 8);i++){
-                            memory[I+i] = R[i];
+                            memory[I+i] = (byte) R[i];
                         }
                         pc += 2;
                         break;
