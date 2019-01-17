@@ -16,8 +16,8 @@ public class Screen extends JPanel {
 
     public Screen(){
         screen = new BufferedImage(640, 320, BufferedImage.TYPE_INT_ARGB);
-        black = Color.BLACK.getRGB();//new Color(0,0,0).getRGB();
-        white = Color.WHITE.getRGB();//new Color(255,255,255).getRGB();
+        black = Color.BLACK.getRGB();
+        white = Color.WHITE.getRGB();
         pixels = new int[32][64];
         redraw();
     }
@@ -37,14 +37,12 @@ public class Screen extends JPanel {
     }
 
     private void redrawPixel(int x, int y, int c) {
-        //Color c = (colour == 0) ? Color.white : Color.black;
         c = (c == 0) ? black : white;
         for(int i = x*scale;i<(x*scale)+scale;i++) {
             for (int j = y * scale; j < (y * scale) + scale; j++) {
                 screen.setRGB(i, j, c);
             }
         }
-        repaint();
     }
 
     public void redraw(){

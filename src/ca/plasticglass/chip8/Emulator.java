@@ -3,7 +3,7 @@ package ca.plasticglass.chip8;
 public class Emulator {
     public static void main(String[] args) {
         if(args.length < 1) {
-            System.out.println("Filename not provided");
+            System.out.println("ERROR: Filename not provided");
             System.exit(-1);
         }
 

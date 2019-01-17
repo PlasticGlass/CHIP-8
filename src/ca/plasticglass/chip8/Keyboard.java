@@ -32,13 +32,13 @@ public class Keyboard extends KeyAdapter {
             if(!keysCurrentlyPressed.contains(key)) {
                 keysCurrentlyPressed.add(key);
             }
-            System.out.println("DEBUG: " + keysCurrentlyPressed);
+            //System.out.println("DEBUG: " + keysCurrentlyPressed);
         }
     }
 
     public void keyReleased(KeyEvent e){
         keysCurrentlyPressed.removeIf(key -> key == e.getKeyChar());
-        System.out.println("DEBUG: " + keysCurrentlyPressed);
+        //System.out.println("DEBUG: " + keysCurrentlyPressed);
     }
 
     private boolean keyValid(char key){
@@ -67,5 +67,4 @@ public class Keyboard extends KeyAdapter {
         }
         return -1;
     }
-
 }

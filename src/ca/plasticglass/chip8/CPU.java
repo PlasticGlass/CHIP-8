@@ -8,18 +8,16 @@ import java.util.TimerTask;
  * Created by Zubair Waheed on 3/13/2018.
  */
 public class CPU {
-    private int[] R; //General purpose registers -- R15 is flag -- should not be used by any instruction
-    private int I; //Used to store memory addresses
+    private int[] R;
+    private int I;
     private int pc;
     private int opcode;
-    private int lastOpcode;
     private int delay;
     private int sound;
     private int[] stack;
     private int stackPointer;
     private Screen screen;
     private short[] memory;
-    private int[] keys;
     private boolean redrawRequired;
     private Random rand;
     private Keyboard keyboard;
@@ -34,19 +32,17 @@ public class CPU {
         initComponents();
         initTimers();
 
-        pc = memory.getLoadPoint(); //0x200
+        pc = memory.getLoadPoint();
     }
 
     private void initComponents() {
         R = new int[16];
         stack = new int[16];
-        keys = new int[16];
         rand = new Random();
 
         I = 0;
         stackPointer = 0;
         opcode = 0;
-        lastOpcode = opcode;
     }
 
     private void initTimers() {
@@ -77,18 +73,11 @@ public class CPU {
      * Stored in Big-Endian so top first
      */
     private void fetch() {
-        lastOpcode = opcode;
         short top = memory[pc];
         short bottom = memory[pc+1];
         opcode = ((top << 8) | bottom);
-        //System.out.println("DEBUG: Fetched opcode: " + String.format("%02X ", opcode));
     }
 
-    private void printRegisterStatus () {
-        for(int i = 0;i<16;i++){
-            System.out.println("R["+i+"]: " + R[i]);
-        }
-    }
 
     /**
      * Decodes and executes current instruction
@@ -99,7 +88,6 @@ public class CPU {
     private void execute() {
         //printRegisterStatus();
         //System.out.println("About to execute: " +String.format("%02X ", opcode));
-        //Filter based on first hex digit
         switch (opcode & 0xF000) {
             case 0x0000:
                 switch (opcode) {
@@ -114,16 +102,16 @@ public class CPU {
                 }
                 pc += 2;
                 break;
-            case 0x1000: //Jump to NNN ie Set PC to NNN
+            case 0x1000:
                 pc = (opcode & 0x0FFF);
                 break;
-            case 0x2000: //Call subroutine at NNN
+            case 0x2000:
                 stack[stackPointer] = pc;
                 stackPointer++;
 
                 pc = (opcode & 0x0FFF);
                 break;
-            case 0x3000: //(3xkk)Skip next instruction if Rx = kk
+            case 0x3000:
                 int val3 = opcode & 0x00FF;
                 int index3 = ((opcode & 0x0F00) >> 8);
                 if (R[index3] == val3)
@@ -131,7 +119,7 @@ public class CPU {
                 else
                     pc += 2;
                 break;
-            case 0x4000: //(4xkk)Skip next instruction if Rx != kk
+            case 0x4000:
                 int val4 = (opcode & 0x00FF);
                 int index4 = ((opcode & 0x0F00) >> 8);
                 if (R[index4] != val4)
@@ -139,17 +127,17 @@ public class CPU {
                 else
                     pc += 2;
                 break;
-            case 0x5000: //(5xy0)Skip next instruction if Rx = Ry
+            case 0x5000:
                 if (R[(opcode & 0x0F00) >> 8] == R[(opcode & 0x00F0) >> 4])
                     pc += 4;
                 else
                     pc += 2;
                 break;
-            case 0x6000: //(6xkk)Set Rx = kk
+            case 0x6000:
                 R[(opcode & 0x0F00) >> 8] = (opcode & 0x00FF);
                 pc += 2;
                 break;
-            case 0x7000://(7xkk)Set Rx = Rx + kk
+            case 0x7000:
                 R[(opcode & 0x0F00) >> 8] += (opcode & 0x00FF);
                 if(R[(opcode & 0x0F00) >> 8] >= 256){
                     R[(opcode & 0x0F00) >> 8] -= 256; //Prevent overflow/out of bounds array index
@@ -172,15 +160,15 @@ public class CPU {
                         R[(opcode & 0x0F00) >> 8] ^= R[(opcode & 0x00F0) >> 4];
                         break;
                     case 0x0004: //add register at second digit to register at third digit
-                        int i14 = ((opcode & 0x0F00) >> 8); //Don't want last 2 digits
-                        int i24 = ((opcode & 0x00F0) >> 4); //Don't want last digit (4 bits)
+                        int i14 = ((opcode & 0x0F00) >> 8);
+                        int i24 = ((opcode & 0x00F0) >> 4);
 
                         //All registers are 8 bits -- value greater than 255 requires carry
                         R[0xF] = (R[i24] > (0xFF - R[i14])) ? 1 : 0; //R15 is flag
 
                         R[i14] += R[i24];
                         break;
-                    case 0x0005: //Sub
+                    case 0x0005:
                         int i15 = ((opcode & 0x0F00) >> 8);
                         int i25 = ((opcode & 0x00F0) >> 4);
 
@@ -188,7 +176,7 @@ public class CPU {
 
                         R[i15] -= R[i25];
                         break;
-                    case 0x0006: //(8xy6)SHR?
+                    case 0x0006:
                         R[0xF] = (R[(opcode & 0x0F00) >> 8] & 0x1); //Flag set to carry
                         R[(opcode & 0x0F00) >> 8] >>= 1; //Rx divided by 2
                         break;
@@ -226,24 +214,8 @@ public class CPU {
                 pc += 2;
                 break;
             case 0xD000:
-                /*
-                Dxyn - DRW Vx, Vy, nibble
-                Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
-
-                The interpreter reads n bytes from memory, starting at the address stored in I. These bytes
-                are then displayed as sprites on screen at coordinates (Vx, Vy). Sprites are XORed onto the
-                existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set
-                to 0. If the sprite is positioned so part of it is outside the coordinates of the display, it
-                 wraps around to the opposite side of the screen. See instruction 8xy3 for more information on
-                 XOR, and section 2.4, Display, for more information on the Chip-8 screen and sprites.
-
-                Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
-                Each row of 8 pixels is read as bit-coded starting from memory location I; I value doesn’t change
-                after the execution of this instruction. As described above, VF is set to 1 if any screen pixels are
-                flipped from set to unset when the sprite is drawn, and to 0 if that doesn’t happen
-                 */
-                int x = R[((opcode & 0x0F00) >> 8)]; //Don't want last 2 digits
-                int y = R[((opcode & 0x00F0) >> 4)]; //Don't want last digit (4 bits)
+                int x = R[((opcode & 0x0F00) >> 8)];
+                int y = R[((opcode & 0x00F0) >> 4)];
                 int bytes = (opcode & 0x000F);
                 int spritePiece;
                 int mask = 0x80; //0x80 = 0b1000 0000
@@ -257,7 +229,7 @@ public class CPU {
                     for(int xc = 0;xc<8;xc++) {
                         if ((spritePiece & (mask >> xc)) != 0){
                             if(screen.getPixel(x + xc, y + i) == 1){
-                                R[0xF] = 1; //Collision flag
+                                R[0xF] = 1; //Collision
                             }
                             screen.setPixel(x + xc, y + i);
                         }
@@ -292,7 +264,7 @@ public class CPU {
                         pc += 2;
                         break;
                     case 0x000A:
-                        R[(opcode & 0x0F00) >> 8] = (int) keyboard.waitForKeypress();
+                        R[(opcode & 0x0F00) >> 8] = keyboard.waitForKeypress();
                         pc += 2;
                         break;
                     case 0x0015:
@@ -316,8 +288,6 @@ public class CPU {
                         pc += 2;
                         break;
                     case 0x0033:
-                        //Copied from
-                        //http://www.multigesture.net/wp-content/uploads/mirror/goldroad/chip8.shtml
                         memory[I] = (short)(R[((opcode & 0x0F00) >> 8)] / 100);
                         memory[I + 1] = (short)((R[((opcode & 0x0F00) >> 8)] / 10) % 10);
                         memory[I + 2] = (short)((R[((opcode & 0x0F00) >> 8)] % 100) % 10);
@@ -335,8 +305,7 @@ public class CPU {
                         }
                         pc += 2;
                         break;
-                    default: //Invalid
-
+                    default:
                 }
                 break;
         }
@@ -347,15 +316,17 @@ public class CPU {
         execute();
     }
 
-    public int getCurrentOpcode() {
-        return I;
-    }
-
     public boolean redrawRequired() {
         return redrawRequired;
     }
 
     public void redrawComplete() {
         redrawRequired = false;
+    }
+
+    private void printRegisterStatus () {
+        for(int i = 0;i<16;i++){
+            System.out.println("R["+i+"]: " + R[i]);
+        }
     }
 }

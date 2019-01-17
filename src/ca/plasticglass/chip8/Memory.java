@@ -1,7 +1,6 @@
 package ca.plasticglass.chip8;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -13,7 +12,7 @@ public class Memory {
 
     private short[] memory;
     private final int PROGRAM_LOAD_POINT = 0x200;
-    private final int MEMORY_SIZE = 0xFFF; //+1 because of zero index
+    private final int MEMORY_SIZE = 0xFFF;
     private int[] fontset =
             {
                     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
