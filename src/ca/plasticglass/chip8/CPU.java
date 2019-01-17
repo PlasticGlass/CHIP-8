@@ -84,6 +84,12 @@ public class CPU {
         //System.out.println("DEBUG: Fetched opcode: " + String.format("%02X ", opcode));
     }
 
+    private void printRegisterStatus () {
+        for(int i = 0;i<16;i++){
+            System.out.println("R["+i+"]: " + R[i]);
+        }
+    }
+
     /**
      * Decodes and executes current instruction
      * opcode details from :
@@ -91,6 +97,8 @@ public class CPU {
      * http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
      */
     private void execute() {
+        //printRegisterStatus();
+        //System.out.println("About to execute: " +String.format("%02X ", opcode));
         //Filter based on first hex digit
         switch (opcode & 0xF000) {
             case 0x0000:
@@ -143,6 +151,9 @@ public class CPU {
                 break;
             case 0x7000://(7xkk)Set Rx = Rx + kk
                 R[(opcode & 0x0F00) >> 8] += (opcode & 0x00FF);
+                if(R[(opcode & 0x0F00) >> 8] >= 256){
+                    R[(opcode & 0x0F00) >> 8] -= 256; //Prevent overflow/out of bounds array index
+                }
                 pc += 2;
                 break;
             case 0x8000:
@@ -258,14 +269,14 @@ public class CPU {
             case 0xE000:
                 switch (opcode & 0x00FF) {
                     case 0x009E: //Skip next instruction if key with the value of Vx is pressed.
-                        if(keyboard.keyCurrentlyPressed((char) (R[(opcode & 0x0F00) >> 8]))) {
+                        if(keyboard.keyCurrentlyPressed((R[(opcode & 0x0F00) >> 8]))) {
                             pc += 4;
                         } else {
                             pc += 2;
                         }
                         break;
                     case 0x00A1: //Skip next instruction if key with the value of Vx is not pressed.
-                        if(!keyboard.keyCurrentlyPressed((char) (R[(opcode & 0x0F00) >> 8]))){
+                        if(!keyboard.keyCurrentlyPressed((R[(opcode & 0x0F00) >> 8]))){
                             pc += 4;
                         } else {
                             pc += 2;

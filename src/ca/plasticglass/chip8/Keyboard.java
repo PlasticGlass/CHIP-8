@@ -12,17 +12,17 @@ public class Keyboard extends KeyAdapter {
     private List<Character> keysCurrentlyPressed;
     private final char[] keys = new char[] {
             KeyEvent.VK_1, KeyEvent.VK_2, KeyEvent.VK_3, KeyEvent.VK_4,
-            KeyEvent.VK_5, KeyEvent.VK_6, KeyEvent.VK_7, KeyEvent.VK_8,
-            KeyEvent.VK_9, KeyEvent.VK_0, KeyEvent.VK_A, KeyEvent.VK_B,
-            KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_E, KeyEvent.VK_F
+            KeyEvent.VK_Q, KeyEvent.VK_W, KeyEvent.VK_E, KeyEvent.VK_R,
+            KeyEvent.VK_A, KeyEvent.VK_S, KeyEvent.VK_D, KeyEvent.VK_F,
+            KeyEvent.VK_Z, KeyEvent.VK_X, KeyEvent.VK_C
     };
 
     public Keyboard(){
         keysCurrentlyPressed = new ArrayList<>();
     }
 
-    public boolean keyCurrentlyPressed(char key){
-        return keysCurrentlyPressed.contains(key);
+    public boolean keyCurrentlyPressed(int key){
+        return keysCurrentlyPressed.contains(keys[key]);
     }
 
     public void keyPressed(KeyEvent e){
@@ -42,7 +42,7 @@ public class Keyboard extends KeyAdapter {
     }
 
     private boolean keyValid(char key){
-        for(int i = 0;i<16;i++){
+        for(int i = 0;i<15;i++){
             if(keys[i] == key){
                 return true;
             }
@@ -51,7 +51,7 @@ public class Keyboard extends KeyAdapter {
         return false;
     }
 
-    public char waitForKeypress(){
+    public int waitForKeypress(){
         while(keysCurrentlyPressed.isEmpty()){
             try {
                 Thread.sleep(100);
@@ -59,7 +59,13 @@ public class Keyboard extends KeyAdapter {
                 ex.printStackTrace();
             }
         }
-        return keysCurrentlyPressed.get(0);
+        Character key = keysCurrentlyPressed.get(0);
+        for(int i = 0;i<keys.length;i++){
+            if(keys[i] == key){
+                return i;
+            }
+        }
+        return -1;
     }
 
 }

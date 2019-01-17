@@ -50,7 +50,7 @@ public class Memory {
             ex.printStackTrace();
         }
 
-        printMemoryState();
+        //printMemoryState();
     }
 
     private void loadFontset() {
