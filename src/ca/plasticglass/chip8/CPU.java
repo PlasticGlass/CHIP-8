@@ -12,6 +12,7 @@ public class CPU {
     private int I; //Used to store memory addresses
     private int pc;
     private int opcode;
+    private int lastOpcode;
     private int delay;
     private int sound;
     private int[] stack;
@@ -19,7 +20,7 @@ public class CPU {
     private Screen screen;
     private short[] memory;
     private int[] keys;
-    private boolean redrawStatus;
+    private boolean redrawRequired;
     private Random rand;
     private Keyboard keyboard;
     private Timer delayTimer;
@@ -45,6 +46,7 @@ public class CPU {
         I = 0;
         stackPointer = 0;
         opcode = 0;
+        lastOpcode = opcode;
     }
 
     private void initTimers() {
@@ -75,6 +77,7 @@ public class CPU {
      * Stored in Big-Endian so top first
      */
     private void fetch() {
+        lastOpcode = opcode;
         short top = memory[pc];
         short bottom = memory[pc+1];
         opcode = ((top << 8) | bottom);
@@ -94,6 +97,7 @@ public class CPU {
                 switch (opcode) {
                     case 0x00E0: //CLS
                         screen.clear();
+                        redrawRequired = true;
                         break;
                     case 0x00EE: //Return from subroutine
                         stackPointer--;
@@ -138,7 +142,7 @@ public class CPU {
                 pc += 2;
                 break;
             case 0x7000://(7xkk)Set Rx = Rx + kk
-                R[(opcode & 0x0F00) >> 8] += (opcode & 0x0FF);
+                R[(opcode & 0x0F00) >> 8] += (opcode & 0x00FF);
                 pc += 2;
                 break;
             case 0x8000:
@@ -160,33 +164,33 @@ public class CPU {
                         int i14 = ((opcode & 0x0F00) >> 8); //Don't want last 2 digits
                         int i24 = ((opcode & 0x00F0) >> 4); //Don't want last digit (4 bits)
 
-                        R[i14] += R[i24];
-
                         //All registers are 8 bits -- value greater than 255 requires carry
-                        R[0x000F] = (R[i14] > 0x0FF) ? 1 : 0; //R15 is flag
+                        R[0xF] = (R[i24] > (0xFF - R[i14])) ? 1 : 0; //R15 is flag
+
+                        R[i14] += R[i24];
                         break;
                     case 0x0005: //Sub
                         int i15 = ((opcode & 0x0F00) >> 8);
                         int i25 = ((opcode & 0x00F0) >> 4);
 
-                        R[0x000F] = (R[i15] > R[i25]) ? 1 : 0; //Flag set to NOT borrow
+                        R[0xF] = (R[i15] >= R[i25]) ? 1 : 0; //Flag set to NOT borrow
 
                         R[i15] -= R[i25];
                         break;
                     case 0x0006: //(8xy6)SHR?
-                        R[0x000F] = ((R[(opcode & 0x0F00) >> 8] & 0x0001) == 1) ? 1 : 0; //Flag set to carry
+                        R[0xF] = (R[(opcode & 0x0F00) >> 8] & 0x1); //Flag set to carry
                         R[(opcode & 0x0F00) >> 8] >>= 1; //Rx divided by 2
                         break;
                     case 0x0007:
                         int i17 = ((opcode & 0x0F00) >> 8);
                         int i27 = ((opcode & 0x00F0) >> 4);
 
-                        R[0x000F] = (R[i27] > R[i17]) ? 1 : 0; //Flag set to NOT borrow
+                        R[0x000F] = (R[i27] >= R[i17]) ? 1 : 0; //Flag set to NOT borrow
 
                         R[i17] = (R[i27] - R[i17]);
                         break;
                     case 0x000E:
-                        R[0x000F] = ((R[(opcode & 0x0F00) >> 8] >> 7) == 1) ? 1 : 0;
+                        R[0xF] = (R[(opcode & 0x0F00) >> 8] >> 7);
                         R[(opcode & 0x0F00) >> 8] <<= 1;
                         break;
                     default:
@@ -240,7 +244,7 @@ public class CPU {
                     //Draw the horizontal sprite piece
                     //Horizontal pieces have fixed width of 1 byte
                     for(int xc = 0;xc<8;xc++) {
-                        if ((spritePiece & (mask >> xc)) == 1){
+                        if ((spritePiece & (mask >> xc)) != 0){
                             if(screen.getPixel(x + xc, y + i) == 1){
                                 R[0xF] = 1; //Collision flag
                             }
@@ -248,7 +252,7 @@ public class CPU {
                         }
                     }
                 }
-                redrawStatus = true;
+                redrawRequired = true;
                 pc += 2;
                 break;
             case 0xE000:
@@ -289,24 +293,28 @@ public class CPU {
                         pc += 2;
                         break;
                     case 0x001E:
+                        if(I + R[(opcode & 0x0F00) >> 8] > 0xFFF)
+                            R[0xF] = 1;
+                        else
+                            R[0xF] = 0;
                         I += R[(opcode & 0x0F00) >> 8];
                         pc += 2;
                         break;
                     case 0x0029:
-                        I = R[(opcode & 0x0F00) >> 8] * 5; //Sprites are 5 bytes long
+                        I = R[(opcode & 0x0F00) >> 8] * 0x5; //Sprites are 5 bytes long
                         pc += 2;
                         break;
                     case 0x0033:
                         //Copied from
                         //http://www.multigesture.net/wp-content/uploads/mirror/goldroad/chip8.shtml
-                        memory[I] = (byte)(R[((opcode & 0x0F00) >> 8)] / 100);
-                        memory[I + 1] = (byte)((R[((opcode & 0x0F00) >> 8)] / 10) % 10);
-                        memory[I + 2] = (byte)((R[((opcode & 0x0F00) >> 8)] % 100) % 10);
+                        memory[I] = (short)(R[((opcode & 0x0F00) >> 8)] / 100);
+                        memory[I + 1] = (short)((R[((opcode & 0x0F00) >> 8)] / 10) % 10);
+                        memory[I + 2] = (short)((R[((opcode & 0x0F00) >> 8)] % 100) % 10);
                         pc += 2;
                         break;
                     case 0x0055:
                         for(int i = 0;i<((opcode & 0x0F00) >> 8);i++){
-                            memory[I+i] = (byte) R[i];
+                            memory[I+i] = (short) R[i];
                         }
                         pc += 2;
                         break;
@@ -333,10 +341,10 @@ public class CPU {
     }
 
     public boolean redrawRequired() {
-        return redrawStatus;
+        return redrawRequired;
     }
 
     public void redrawComplete() {
-        redrawStatus = false;
+        redrawRequired = false;
     }
 }
