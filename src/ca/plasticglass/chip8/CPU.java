@@ -1,6 +1,8 @@
 package ca.plasticglass.chip8;
 
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Zubair Waheed on 3/13/2018.
@@ -10,26 +12,32 @@ public class CPU {
     private int I; //Used to store memory addresses
     private int pc;
     private int opcode;
-    private int[] pixels;
-    private int delayTimer;
-    private int soundTimer;
+    private int delay;
+    private int sound;
     private int[] stack;
     private int stackPointer;
-    private int[] keypad;
     private Screen screen;
     private int[] memory;
     private int[] keys;
     private boolean redrawStatus;
     private Random rand;
     private Keyboard keyboard;
+    private Timer delayTimer;
+    private Timer soundTimer;
 
     public CPU(Memory memory, Screen screen, Keyboard keyboard) {
         this.screen = screen;
         this.memory = memory.getMemory();
         this.keyboard = keyboard;
 
+        initComponents();
+        initTimers();
+
+        pc = memory.getLoadPoint(); //0x200
+    }
+
+    private void initComponents() {
         R = new int[16];
-        pixels = new int[2048];
         stack = new int[16];
         keys = new int[16];
         rand = new Random();
@@ -37,7 +45,26 @@ public class CPU {
         I = 0;
         stackPointer = 0;
         opcode = 0;
-        pc = memory.getLoadPoint(); //0x200
+    }
+
+    private void initTimers() {
+        delayTimer = new Timer();
+        delayTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                delay--;
+            }
+        },17, 17); //Run 60 times/second (17ms*60) = 1020ms = 1s
+
+        soundTimer = new Timer();
+        soundTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if(sound > 0) {
+                    sound--;
+                }
+            }
+        },17, 17);
     }
 
     /**
@@ -202,7 +229,8 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
                     sprite = memory[I+i];
                 }
                 screen.setPixel(x,y);
-
+                redrawStatus = true;
+                pc += 2;
                 break;
             case 0xE000:
                 switch (opcode & 0x00FF) {
@@ -222,7 +250,7 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
             case 0xF000:
                 switch (opcode & 0x00FF) {
                     case 0x0007:
-                        R[(opcode & 0x0F00) >> 8] = delayTimer;
+                        R[(opcode & 0x0F00) >> 8] = delay;
                         pc += 2;
                         break;
                     case 0x000A:
@@ -230,11 +258,11 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
                         pc += 2;
                         break;
                     case 0x0015:
-                        delayTimer = R[(opcode & 0x0F00) >> 8];
+                        delay = R[(opcode & 0x0F00) >> 8];
                         pc += 2;
                         break;
                     case 0x0018:
-                        soundTimer = R[(opcode & 0x0F00) >> 8];
+                        sound = R[(opcode & 0x0F00) >> 8];
                         pc += 2;
                         break;
                     case 0x001E:
@@ -282,6 +310,10 @@ to 0. If the sprite is positioned so part of it is outside the coordinates of th
     }
 
     public boolean redrawRequired() {
-        return true;
+        return redrawStatus;
+    }
+
+    public void redrawComplete() {
+        redrawStatus = false;
     }
 }

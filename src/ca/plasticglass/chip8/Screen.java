@@ -36,7 +36,7 @@ public class Screen extends JPanel {
         return pixels[y][x];
     }
 
-    public void redrawPixel(int x, int y, int c) {
+    private void redrawPixel(int x, int y, int c) {
         //Color c = (colour == 0) ? Color.white : Color.black;
         c = (c == 0) ? black : white;
         for(int i = x*scale;i<(x*scale)+scale;i++) {
@@ -44,7 +44,6 @@ public class Screen extends JPanel {
                 screen.setRGB(i, j, c);
             }
         }
-        repaint();
     }
 
     public void redraw(){

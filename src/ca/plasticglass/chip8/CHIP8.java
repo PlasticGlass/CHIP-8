@@ -5,49 +5,7 @@ import javax.swing.*;
 /**
  * Created by Zubair Waheed on 3/13/2018.
  */
-//public class CHIP8 {
-    /*private static short opcode; //Java short - 2 bytes, same size as opcode
-    private static CPU cpu;
-    private static Memory memory;
-    private static Screen screen;
-    private static String filename = "ROM";
-    private static boolean redraw;
-
-
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("CHIP 8");
-
-
-
-
-        memory = new Memory();
-        screen = new Screen();
-        cpu = new CPU(memory, screen);
-
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(screen);
-        frame.setVisible(true);
-        frame.setResizable(false);
-
-        redraw = false;
-
-        memory.loadFile(filename);
-
-        while(true){
-            cpu.cycle();
-
-
-            if(cpu.redrawRequired()){
-                screen.redraw();
-            }
-
-            cpu.updateKeysPressed();
-
-
-        }
-    }*/
 public class CHIP8 {
-
     private CPU cpu;
     private Memory memory;
     private Screen screen;
@@ -75,6 +33,22 @@ public class CHIP8 {
         this.display.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.display.addKeyListener(keyboard);
     }
+
+    public void loadFile(String fileName) {
+        this.memory.loadFile(fileName);
+    }
+
+    public void cycle() {
+        this.cpu.cycle();
+    }
+
+    public void redraw() {
+        if(this.cpu.redrawRequired()){
+            this.screen.redraw();
+            this.cpu.redrawComplete();
+        }
+    }
+
 }
 
 
